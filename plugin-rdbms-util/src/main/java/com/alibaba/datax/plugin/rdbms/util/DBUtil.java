@@ -4,6 +4,7 @@ import com.alibaba.datax.common.exception.DataXException;
 import com.alibaba.datax.common.util.Configuration;
 import com.alibaba.datax.common.util.RetryUtil;
 import com.alibaba.datax.plugin.rdbms.reader.Key;
+import com.alibaba.druid.filter.config.ConfigTools;
 import com.alibaba.druid.sql.parser.SQLParserUtils;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -389,6 +390,21 @@ public final class DBUtil {
         try {
             Class.forName(dataBaseType.getDriverClassName());
             DriverManager.setLoginTimeout(Constant.TIMEOUT_SECONDS);
+
+            String decrypt = System.getProperty("druid.config.decrypt");
+            String key = System.getProperty("druid.config.decrypt.key");
+            if (decrypt != null && "true".equalsIgnoreCase(decrypt)) {
+                // 处理druid.config.decrypt=true的情况
+                String oldPassword = prop.getProperty("password");
+                LOG.info("需要解密密码，密码密文为" + oldPassword);
+                try {
+                    String decryptedPassword = ConfigTools.decrypt(ConfigTools.getPublicKey(key), oldPassword);
+                    prop.setProperty("password", decryptedPassword);
+                } catch (Exception e) {
+                    LOG.error("解密密码失败", e);
+                }
+            }
+
             return DriverManager.getConnection(url, prop);
         } catch (Exception e) {
             throw RdbmsException.asConnException(dataBaseType, e, prop.getProperty("user"), null);
