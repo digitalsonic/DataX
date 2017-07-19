@@ -47,6 +47,12 @@
 			<groupId>com.aliyun.odps</groupId>
 			<artifactId>odps-sdk-core</artifactId>
 			<version>0.19.3-public</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.alibaba.external</groupId>
+					<artifactId>bouncycastle.provider</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
         <dependency>
